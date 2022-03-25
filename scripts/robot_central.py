@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 
-from pynput import keyboard
+#from pynput import keyboard
 # Librerías Nuevas
 import rospy
 from geometry_msgs.msg import Twist
@@ -9,6 +9,8 @@ import numpy as np
 import RPi.GPIO as GPIO
 import time as time
 from time import sleep
+
+global posicion
 
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
@@ -49,8 +51,8 @@ x = [0]
 y = [0]
 theta = [0]
 
-rw = 3.25  # cm Radio rueda
-l = 17  # cm Distancia entre ruedas
+rw = 0.0325  # m Radio rueda
+l = 0.17  # m Distancia entre ruedas
 
 
 phi_r = 0
@@ -65,15 +67,21 @@ posicion = Twist()
 def callback(msg):
     lineal = round(msg.linear.x, 2)
     angular = round(msg.angular.z, 2)
-    
-    phi_r = 0  # Velocidad angular en radianes rueda derecha
-    phi_l = 0  # Velocidad angular en radianes rueda izquierda
-    
-    Vr = rw*phi_r  # Velocidad lineal rueda derecha
-    Vl = rw*phi_l  # Velocidad lineal rueda izquierda
 
+    Vr = abs(lineal)  # rw*phi_r  # Velocidad lineal rueda derecha
+    Vl = abs(lineal)  # rw*phi_l  # Velocidad lineal rueda izquierda
+
+    phi_r_recto = Vr*60/(200*np.pi*rw)  # Velocidad angular en radianes rueda derecha
+    phi_l_recto = Vl*60/(200*np.pi*rw)  # Velocidad angular en radianes rueda izquierda
+
+    phi_r_giro = abs(angular)*l/(2*rw)
+    phi_l_giro = abs(angular)*l/(2*rw)
+
+    pwm_recto = (phi_r_recto-26.25)/0.975  # formula
     
-    
+    pwm_giro = (phi_r_giro-26.25)/0.975  # formula
+
+
     forward1.start(0)
     reverse1.start(0)
     forward2.start(0)
@@ -84,80 +92,87 @@ def callback(msg):
     if lineal > 0:  # Movimiento hacia adelante
 
         GPIO.output(Motor1E, GPIO.HIGH)
-        forward1.ChangeDutyCycle(abs(lineal))
+        forward1.ChangeDutyCycle(pwm_recto)
         reverse1.ChangeDutyCycle(0)
 
         GPIO.output(Motor2E, GPIO.HIGH)
-        forward2.ChangeDutyCycle(abs(lineal))
+        forward2.ChangeDutyCycle(pwm_recto)
         reverse2.ChangeDutyCycle(0)
-        rospy.loginfo(lineal)
 
-
+        Vr = abs(Vr/100)
+        Vl = abs(Vl/100)
+        
     elif lineal < 0:  # Movimiento hacia atrás
 
         GPIO.output(Motor1E, GPIO.HIGH)
         forward1.ChangeDutyCycle(0)
-        reverse1.ChangeDutyCycle(abs(lineal))
+        reverse1.ChangeDutyCycle(pwm_recto)
 
         GPIO.output(Motor2E, GPIO.HIGH)
         forward2.ChangeDutyCycle(0)
-        reverse2.ChangeDutyCycle(abs(lineal))
-        rospy.loginfo(lineal)
+        reverse2.ChangeDutyCycle(pwm_recto)
 
 
+        Vr = -1*abs(Vr/100)
+        Vl = -1*abs(Vl/100)
 
-
-    if angular > 0: # Giro a la izquierda
+    if angular > 0:  # Giro a la izquierda
 
         GPIO.output(Motor1E, GPIO.HIGH)
-        forward1.ChangeDutyCycle(abs(angular))
+        forward1.ChangeDutyCycle(pwm_giro)
         reverse1.ChangeDutyCycle(0)
 
         GPIO.output(Motor2E, GPIO.HIGH)
         forward2.ChangeDutyCycle(0)
-        reverse2.ChangeDutyCycle(abs(angular))
-        rospy.loginfo(angular)
+        reverse2.ChangeDutyCycle(pwm_giro)
+
+
+        Vr = abs(phi_r_giro*rw*2*np.pi/60)
+        Vl = -1*abs(phi_l_giro*rw*2*np.pi/60)
 
     elif angular < 0:  # Giro a la derecha
 
         GPIO.output(Motor1E, GPIO.HIGH)
         forward1.ChangeDutyCycle(0)
-        reverse1.ChangeDutyCycle(abs(angular))
+        reverse1.ChangeDutyCycle(pwm_giro)
 
         GPIO.output(Motor2E, GPIO.HIGH)
-        forward2.ChangeDutyCycle(abs(angular))
+        forward2.ChangeDutyCycle(pwm_giro)
         reverse2.ChangeDutyCycle(0)
-        rospy.loginfo(angular)
 
+        Vr = -1*abs(phi_r_giro*rw*2*np.pi/60)
+        Vl = abs(phi_l_giro*rw*2*np.pi/60)
 
+    dt = 0.1
 
-
-    
-
-    
     # Procesamiento de posición
 
-    #posicion.linear.x = x[-1] + 0.5*(Vr+Vl)*np.cos(theta[-1])*dt
-    # x.append(posicion.linear.x)
-    #posicion.linear.y = y[-1] + 0.5*(Vr+Vl)*np.sin(theta[-1])*dt
-    # y.append(posicion.linear.y)
-    # theta.append(theta[-1]+(1/l)*(Vr-Vl)*dt)
-    # pub.publish(posicion)
+    posicion.linear.x = x[-1] + 0.5*(Vr+Vl)*np.cos(theta[-1])*dt
+    x.append(posicion.linear.x)
+    posicion.linear.y = y[-1] + 0.5*(Vr+Vl)*np.sin(theta[-1])*dt
+    y.append(posicion.linear.y)
+    theta.append(theta[-1]+(1/l)*(Vr-Vl)*dt)
+
+    rospy.loginfo(posicion)
+    
 
 
 # CUERPO DEL CÓDIGO
 def robot_central():
 
-    #pub = rospy.Publisher('robot_position', Twist, queue_size=10)
+    #
     rospy.init_node('robot_central', anonymous=True)
+    pub = rospy.Publisher('robot_position', Twist, queue_size=10)
+    pub.publish(posicion)
+    rospy.loginfo(posicion)
     rospy.Subscriber('robot_cmdVel', Twist, callback)
     
     rospy.spin()
     
+
     # 10hz
-    
-    
-    
+
+
 # Ejecuta función turtle_bot
 if __name__ == '__main__':
     robot_central()
