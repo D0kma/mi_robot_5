@@ -11,6 +11,7 @@ import time as time
 from time import sleep
 
 global posicion
+global pub
 
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
@@ -153,6 +154,9 @@ def callback(msg):
     y.append(posicion.linear.y)
     theta.append(theta[-1]+(1/l)*(Vr-Vl)*dt)
 
+
+    pub = rospy.Publisher('robot_position', Twist, queue_size=10)
+    pub.publish(posicion)
     rospy.loginfo(posicion)
     
 
@@ -162,9 +166,8 @@ def robot_central():
 
     #
     rospy.init_node('robot_central', anonymous=True)
-    pub = rospy.Publisher('robot_position', Twist, queue_size=10)
-    pub.publish(posicion)
-    rospy.loginfo(posicion)
+    
+    
     rospy.Subscriber('robot_cmdVel', Twist, callback)
     
     rospy.spin()
