@@ -19,11 +19,13 @@ Este nodo es el encargado de recibir y procesar las velocidades que anteriorment
 ### Nodo Interface:
 En este nodo se recibe información de la posición del robot y se genera una interfaz que permite ver el movimiento del mismo en tiempo real. Este nodo también guarda un arreglo con las velocidades lineal y angular ingresadas en el nodo Teleop junto con las posiciones registradas en un archivo .txt con el objetivo de poder replicar el recorrido realizado posteriormente.
 
-### Nodo Player:
-El nodo "player" realiza un recorrido por un arreglo de datos ingresado por parámetro. Este arreglo deberá poseer tanto las velocidades tanto angular como lineal junto con las posiciones deseadas para el recorrido del robot. Para la integración de este nodo con el resto de nodos, se utiliza el arreglo guardado en el nodo Interface; esto permitirá que el robot realize de manera autónoma un recorrido que se ha realizado anteriormente de manera manual.
+
+### Nodo Player y Client:
+El nodo "Client" recibe por parámetro un arreglo con las velocidades lineal y angular junto con los movimientos ingresados en el nodo "Teleop" para el movimiento del robot. Este arreglo, por facilidad, es el obtenido del nodo "Interfaz". El nodo lee los valores del arreglo y envía un mensaje tipo twist por un tópico configurado, simulando ser el noto "Teleop".
+
+El nodo "player", que funciona como servicio del nodo "Client", recibe el mensaje enviado por "Client" y realiza el movimiento correspondiente. De esta forma, los nodos "Client" y "Player" permiten replicar de manera autónoma un recorrido previamente realizado desde el nodo "Teleop".
 
 
-## Funcionamiento del código
 
 ## Consideraciones:
 
