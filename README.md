@@ -32,7 +32,5 @@ El nodo "player" realiza un recorrido por un arreglo de datos ingresado por par�
 - Tenga presente que las velocidades lineal y angular máximas del robót son 7 y 8 respectivamente. Si se ingresan valores mayores a los mencionados anteriormente, se tomarán como ingresados los valores máximos.
 
 ## Informe
-Link de acceso a informe sobre desarrollo del taller 2  [solo lectura]
-
-https://es.overleaf.com/read/qnnbpmcxjvyq
+En el contenido del repositorio se encuentra un archivo .pdf en el que se reporta el informe de desarrollo del taller 2.
 
