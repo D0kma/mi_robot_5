@@ -63,12 +63,19 @@ Vr = 0
 Vl = 0
 
 posicion = Twist()
+forward1.start(0)
+reverse1.start(0)
+forward2.start(0)
+reverse2.start(0)
 
 
 def callback(msg):
+    ti=time.time()
     lineal = round(msg.linear.x, 2)
     angular = round(msg.angular.z, 2)
-
+    #rospy.loginfo(lineal)
+    
+    
     Vr = abs(lineal)  # rw*phi_r  # Velocidad lineal rueda derecha
     Vl = abs(lineal)  # rw*phi_l  # Velocidad lineal rueda izquierda
 
@@ -78,15 +85,17 @@ def callback(msg):
     phi_r_giro = abs(angular)*l/(2*rw)
     phi_l_giro = abs(angular)*l/(2*rw)
 
-    pwm_recto = (phi_r_recto-26.25)/0.975  # formula
+    pwm_recto = (phi_r_recto-8)/0.15  # formula
     
-    pwm_giro = (phi_r_giro-26.25)/0.975  # formula
-
-
-    forward1.start(0)
-    reverse1.start(0)
-    forward2.start(0)
-    reverse2.start(0)
+    pwm_giro = (phi_r_giro-8)/0.15  # formula
+    
+    
+    
+    forward1.start(20)
+    reverse1.start(20)
+    forward2.start(20)
+    reverse2.start(20)
+    
 
     # GPIO a motores
 
@@ -118,6 +127,7 @@ def callback(msg):
         Vl = -1*abs(Vl/100)
 
     if angular > 0:  # Giro a la izquierda
+    	
 
         GPIO.output(Motor1E, GPIO.HIGH)
         forward1.ChangeDutyCycle(pwm_giro)
@@ -130,8 +140,11 @@ def callback(msg):
 
         Vr = abs(phi_r_giro*rw*2*np.pi/60)
         Vl = -1*abs(phi_l_giro*rw*2*np.pi/60)
+        
+        
 
     elif angular < 0:  # Giro a la derecha
+    	
 
         GPIO.output(Motor1E, GPIO.HIGH)
         forward1.ChangeDutyCycle(0)
@@ -144,7 +157,8 @@ def callback(msg):
         Vr = -1*abs(phi_r_giro*rw*2*np.pi/60)
         Vl = abs(phi_l_giro*rw*2*np.pi/60)
 
-    dt = 0.1
+    tf=time.time()
+    dt=(tf-ti)*1000
 
     # Procesamiento de posición
 
@@ -152,12 +166,15 @@ def callback(msg):
     x.append(posicion.linear.x)
     posicion.linear.y = y[-1] + 0.5*(Vr+Vl)*np.sin(theta[-1])*dt
     y.append(posicion.linear.y)
-    theta.append(theta[-1]+(1/l)*(Vr-Vl)*dt)
+    
+    posicion.angular.z = theta[-1]+(1/l)*(Vr-Vl)*dt*0.9
+    theta.append(posicion.angular.z)
 
 
     pub = rospy.Publisher('robot_position', Twist, queue_size=10)
     pub.publish(posicion)
     rospy.loginfo(posicion)
+    
     
 
 

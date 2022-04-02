@@ -19,17 +19,17 @@ def robot_teleop():
 
     pub = rospy.Publisher('robot_cmdVel', Twist, queue_size=10)
     rospy.init_node('robot_teleop', anonymous=True)
-    rate = rospy.Rate(15)  # 10hz
+    rate = rospy.Rate(25)  # 10hz
 
     # Set velocidad lineal y angular
-    speed_str = input("Enter the speed: ")
+    speed_str = input("Enter the speed in int (max 7 cm/s): ")
     try:
         speed = int(speed_str)
         print('Speed: ', speed)
     except:
         print('Se ha ingresado un valor inválido. Es necesario reiniciar el nodo')
 
-    angle_str = input("Enter the angle: ")
+    angle_str = input("Enter the angle in int (max 8 rpm): ")
 
     try:
         angle = int(angle_str)

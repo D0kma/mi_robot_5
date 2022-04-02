@@ -18,8 +18,8 @@ yr=[]
 
 def callback(msg):
 	
-	x = round(msg.linear.x,2)
-	y = round(msg.linear.y,2)
+	x = round(msg.linear.x,4)
+	y = round(msg.linear.y,4)
 	xr.append(x)
 	yr.append(y)
 
@@ -47,11 +47,11 @@ def guardar():
 	for j in range (2,len(lista_nueva)-2):
 		recorrido.append(lista_nueva[j+2])
 	print(recorrido)
-	np.savetxt('/home/robotica/catkin_ws/src/taller2_pkg/results/'+nom.get()+'.txt',recorrido,fmt="%s")
+	np.savetxt('/home/ubuntu/catkin_ws/src/mi_robot_5/results/'+nom.get()+'.txt',recorrido,fmt="%s")
 
 def guardarGraf():
 	plt.title(nomGraf.get())
-	plt.savefig('/home/robotica/catkin_ws/src/taller2_pkg/results/'+nomGraf.get()+'.png')
+	plt.savefig('/home/ubuntu/catkin_ws/src/mi_robot_5/results/'+nomGraf.get()+'.png')
 
 
 def pausar():
