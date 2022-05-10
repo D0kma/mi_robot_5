@@ -2,7 +2,7 @@
 
 ## Generalidades y estructura de fucionamiento
 
-Se tienen 9 códigos necesarios para la funcionalidad completa del robot:
+Se tienen 9 códigos principales necesarios para la funcionalidad completa del robot:
 
 - teleop
 - central
